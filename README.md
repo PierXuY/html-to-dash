@@ -2,6 +2,7 @@
 Convert HTML to dash format.
 # Example
 ```
+## Basic usage
 from html_to_dash import parse_html
 element_str = """
 <div>
@@ -32,36 +33,10 @@ html.Div(
     ]
 )
 ```
+- Only dash.html module support methods are supported
+- Tags and attributes are checked, and those that are not supported are automatically removed.
 
-```
-from html_to_dash import parse_html
-element_str = """
-    <div class='bg-gray-800' style='color:red;margin:10px'>
-        <a href="#" id="link1">A</a>
-    </div>
-    <div>text</div>
-    <div><a href="#" id="link2">B</a></div>
-"""
-parse_html(element_str)
-```
-Print:
-```
---------------------------------------------------
-Result:
-html.Div(
-    children=[
-        html.Div(
-            className="bg-gray-800",
-            style={"color": "red", "margin": "10px"},
-            children=[html.A(href="#", id="link1", children=["A"])],
-        ),
-        html.Div(children=["text"]),
-        html.Div(children=[html.A(href="#", id="link2", children=["B"])]),
-    ]
-)
-
-```
-
+## Expanded usage
 ```
 from html_to_dash import parse_html
 element_str = """
@@ -111,6 +86,10 @@ html.Div(
     ]
 )
 ```
+- The attributes of the tag are case-insensitive
+- The * sign is supported as a wildcard
+- In fact, attributes with the "-" symbol are processed by default, which is only used here as an example. Similarly, the style attribute can be handled correctly.
+  
 # Reference
 - https://github.com/mhowell86/convert-html-to-dash
 - https://github.com/xhluca/convert-html-to-dash
