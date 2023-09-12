@@ -9,7 +9,7 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 
 setup(
     name="html_to_dash",
-    version='{{VERSION_PLACEHOLDER}}',
+    version='0.0.1',
     author="PierXuY",
     author_email="wxuymail@163.com",
     description="Convert HTML to dash format.",
