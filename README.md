@@ -1,8 +1,8 @@
 # dash_to_html
 Convert HTML to dash format.
 # Example
-```
 ## Basic usage
+```
 from html_to_dash import parse_html
 element_str = """
 <div>
