@@ -33,7 +33,7 @@ html.Div(
     ]
 )
 ```
-- Only dash.html module support methods are supported
+- Only dash.html module support methods are supported.
 - Tags and attributes are checked, and those that are not supported are automatically removed.
 
 ## Expanded usage
@@ -86,8 +86,9 @@ html.Div(
     ]
 )
 ```
-- The attributes of the tag are case-insensitive
-- The * sign is supported as a wildcard
+- The attributes of the tag are case-insensitive.
+- The * sign is supported as a wildcard.
+- Both class and className can be handled correctly.
 - In fact, attributes with the "-" symbol are processed by default, which is only used here as an example. Similarly, the style attribute can be handled correctly.
   
 # Reference
