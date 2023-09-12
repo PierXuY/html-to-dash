@@ -90,9 +90,7 @@ class FormatParser:
             )
             allowed_attrs = globals()["allowed_attrs"]
         else:
-            allowed_attrs = list(filter(lambda x: mod in x.keys(), self.all_mod))[0][
-                mod
-            ][tag]
+            allowed_attrs = list(filter(lambda x: mod in x.keys(), self.all_mod))[0][mod][tag]
 
         attr_map = {"className": "class"}
         ret = list(map(lambda x: attr_map.get(x, x), allowed_attrs))
