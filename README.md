@@ -2,7 +2,7 @@
 Convert HTML to dash format.
 
 # Installation
-`pip install html_to_dash`
+`pip install html-to-dash`
 
 # Examples
 ## Basic usage
