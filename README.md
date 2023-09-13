@@ -1,6 +1,10 @@
-# dash_to_html
+# html_to_dash
 Convert HTML to dash format.
-# Example
+
+# Installation
+`pip install html_to_dash`
+
+# Examples
 ## Basic usage
 ```
 from html_to_dash import parse_html
@@ -90,7 +94,8 @@ html.Div(
 - The * sign is supported as a wildcard.
 - Both class and className can be handled correctly.
 - In fact, attributes with the "-" symbol are processed by default, which is only used here as an example. Similarly, the style attribute can be handled correctly.
-  
-# Reference
+- Supports any custom module, not limited to HTML and DCC. Essentially, it is the processing of strings.
+
+# References
 - https://github.com/mhowell86/convert-html-to-dash
 - https://github.com/xhluca/convert-html-to-dash

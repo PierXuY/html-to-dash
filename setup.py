@@ -5,11 +5,11 @@ import os
 here = os.path.abspath(os.path.dirname(__file__))
 
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
-    long_description = "\\n" + fh.read()
+    long_description = fh.read()
 
 setup(
     name="html_to_dash",
-    version='0.0.2',
+    version='0.0.5',
     author="PierXuY",
     author_email="wxuymail@163.com",
     description="Convert HTML to dash format.",
@@ -24,8 +24,6 @@ setup(
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
-        "Operating System :: Unix",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows"
+        'Operating System :: OS Independent'
     ]
 )
