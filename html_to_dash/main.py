@@ -1,4 +1,3 @@
-import re
 import dash
 from black import format_str, FileMode
 from lxml import etree
@@ -72,12 +71,12 @@ class FormatParser:
     @staticmethod
     def _handle_html_str(html_str: str):
         """
-        If the child elements of the body tag are unique, then the child element is returned;
+        html_str to html_etree
+        1.Remove comments from HTML
+        2.If the child elements of the body tag are unique, then the child element is returned;
         otherwise, the body tag is converted to a div tag.
         """
-        html_str = re.sub("<!--.*?-->", "", html_str)
-        html_etree = etree.HTML(html_str)
-
+        html_etree = etree.HTML(html_str, parser=etree.HTMLParser(remove_comments=True))
         body_tag = html_etree.find("body")
         body_children = body_tag.getchildren()
         if len(body_children) == 1:
