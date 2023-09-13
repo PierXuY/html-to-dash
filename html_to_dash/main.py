@@ -167,8 +167,8 @@ class FormatParser:
         """
         if attr in allowed_attrs:
             return True
-        if attr in wildcard_attrs:
-            if attr.startswith(attr):
+        for wd_attr in wildcard_attrs:
+            if attr.startswith(wd_attr):
                 return True
         print(
             f"Attr: {attr} attribute in {current_mod}.{tag_str} is not supported, has been removed."
