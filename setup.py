@@ -17,7 +17,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    install_requires=['re', 'dash', 'black', 'lxml'],
+    install_requires=['dash', 'black', 'lxml'],
     keywords=['html', 'dash'],
     python_requires=">=3.6",
     classifiers=[
