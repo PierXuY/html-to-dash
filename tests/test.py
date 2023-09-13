@@ -45,4 +45,5 @@ if __name__ == "__main__":
             if "-" in k:
                 return f"**{{'{k}': '{v}'}}"
 
-    parse_html(element_str, extra_mod=extra_mod, tag_attr_func=tag_attr_func)
+    parsed_ret = parse_html(element_str, extra_mod=extra_mod, tag_attr_func=tag_attr_func, if_return=True)
+    print(parsed_ret)
