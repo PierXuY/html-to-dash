@@ -1,4 +1,4 @@
-# html_to_dash
+# html-to-dash
 Convert HTML to dash format.
 
 # Installation
