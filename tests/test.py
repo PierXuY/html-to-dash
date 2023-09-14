@@ -31,6 +31,7 @@ if __name__ == "__main__":
             <a href="#" id="link1">A</a>
         </div>
         <div>text</div>
+        <svg></svg>
         <div><a href="#" id="link2">B</a></div>
     </div>
     </body>
@@ -45,5 +46,11 @@ if __name__ == "__main__":
             if "-" in k:
                 return f"**{{'{k}': '{v}'}}"
 
-    parsed_ret = parse_html(element_str, extra_mod=extra_mod, tag_attr_func=tag_attr_func, if_return=True)
+    parsed_ret = parse_html(
+        element_str,
+        tag_map={"svg": "img"},
+        extra_mod=extra_mod,
+        tag_attr_func=tag_attr_func,
+        if_return=True,
+    )
     print(parsed_ret)

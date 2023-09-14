@@ -1,8 +1,7 @@
 import dash
 from black import format_str, FileMode
 from lxml import etree
-from typing import Union, Callable, List
-from copy import copy
+from typing import Union, Callable, List, Dict
 
 
 class FormatParser:
@@ -10,9 +9,13 @@ class FormatParser:
         self,
         mod,
         html_str,
-        tag_attr_func: Union[None, Callable] = None,
+        tag_map: Union[None, Dict] = None,
         extra_mod: Union[None, List] = None,
+        tag_attr_func: Union[None, Callable] = None,
+        huge_tree: bool = False,
     ):
+        self.tag_map = tag_map
+        self.huge_tree = huge_tree
         self.tag_attr_func = tag_attr_func
 
         html_allowed_tags = [
@@ -26,13 +29,12 @@ class FormatParser:
 
         temp_list = [value for mod in self.all_mod for value in mod.values()]
         self.lower_tag_dict = {k.lower(): k for item in temp_list for k in item.keys()}
-        self.root = self._remove_unsupported_tags(
-            self._handle_html_str(html_str), self.lower_tag_dict.keys()
-        )
+        self.root = self._handle_html_str(html_str, self.lower_tag_dict.keys())
 
     def parse(self, html_etree) -> str:
         """
         Convert HTML format to DASH format recursively.
+        Html_etree should only contain tags allowed by the module before entering the function.
         """
         tag_str_lower = html_etree.tag.lower()
         tag_str = self.lower_tag_dict[tag_str_lower]
@@ -68,39 +70,42 @@ class FormatParser:
         comma = ", " if attrs_str and children_str else ""
         return f"{mod_tag_str}({attrs_str}{comma}{children_str})"
 
-    @staticmethod
-    def _handle_html_str(html_str: str):
+    def _handle_html_str(self, html_str: str, allowed_tags):
         """
         html_str to html_etree
-        1.Remove comments from HTML
-        2.If the child elements of the body tag are unique, then the child element is returned;
-        otherwise, the body tag is converted to a div tag.
+        1.remove comments and unsupported_tags.
+        2.If the child elements of the html tag are unique, then the child element is returned;
+        otherwise, the html tag is converted to a div tag.
         """
-        html_etree = etree.HTML(html_str, parser=etree.HTMLParser(remove_comments=True))
-        body_tag = html_etree.find("body")
-        body_children = body_tag.getchildren()
-        if len(body_children) == 1:
-            html_etree = body_children[0]
-        else:
-            # change body to div
-            div_tag = etree.Element("div")
-            div_tag.extend(body_children)
-            body_tag.getparent().replace(body_tag, div_tag)
-            html_etree = html_etree.getchildren()[0]
-        return html_etree
+        html_etree = etree.HTML(
+            html_str,
+            parser=etree.HTMLParser(remove_comments=True, huge_tree=self.huge_tree),
+        )
+        if self.tag_map:
+            for old_tag, new_tag in self.tag_map.items():
+                elements = html_etree.findall(f".//{old_tag}")
+                for element in elements:
+                    element.tag = new_tag
 
-    @staticmethod
-    def _remove_unsupported_tags(html_etree, allowed_tags):
-        """
-        Remove unsupported tags
-        """
-        ret_etree = copy(html_etree)
-        for child in html_etree.iterdescendants():
-            tag = child.tag
-            if tag not in allowed_tags:
-                print(f"Tag: {tag} tag is not supported, has been removed.")
-                etree.strip_tags(ret_etree, tag)
-        return ret_etree
+        html_etree_tag_names_set = {
+            element.tag for element in html_etree.iterdescendants()
+        }
+        unsupported_tags_set = html_etree_tag_names_set - set(allowed_tags)
+        etree.strip_tags(html_etree, unsupported_tags_set)
+
+        notify_unsupported_tags_set = unsupported_tags_set - {"body", "head"}
+        if notify_unsupported_tags_set:
+            print(
+                f"Tags: Unsupported [{', '.join(notify_unsupported_tags_set)}] removed."
+            )
+
+        html_children = html_etree.getchildren()
+        if len(html_children) == 1:
+            html_etree = html_children[0]
+        else:
+            # change html to div
+            html_etree.tag = "div"
+        return html_etree
 
     def _get_current_mod(self, tag: str) -> str:
         """
@@ -177,22 +182,31 @@ class FormatParser:
 
 def parse_html(
     html_str,
-    tag_attr_func: Union[None, Callable] = None,
     extra_mod: Union[None, List] = None,
+    tag_map: Union[None, Dict] = None,
+    tag_attr_func: Union[None, Callable] = None,
     if_return: bool = False,
+    huge_tree: bool = False,
 ):
     """
     Convert HTML format to DASH format.
     :param html_str: HTML that needs to be converted
-    :param tag_attr_func: Function that handle attribute formatting under tags
     :param extra_mod: Additional module support(Prioritize in order and above the default dash.html module)
+    :param tag_map: Convert the corresponding tag names in the HTML based on the dict content before formal processing.
+    :param tag_attr_func: Function that handle attribute formatting under the tag.
     :param if_return: Whether to return. If it is false, only print result.
+    :param huge_tree: Used when the HTML structure is huge.
     """
     parser = FormatParser(
-        dash.html, html_str, tag_attr_func=tag_attr_func, extra_mod=extra_mod
+        dash.html,
+        html_str,
+        extra_mod=extra_mod,
+        tag_map=tag_map,
+        tag_attr_func=tag_attr_func,
+        huge_tree=huge_tree,
     )
     parsed_format = parser.parse(parser.root)
     parsed_ret = format_str(parsed_format, mode=FileMode())
     if if_return:
         return parsed_ret
-    print("-----" * 10, "Result:", parsed_ret, sep="\n")
+    print("-----" * 16, "Result:", parsed_ret, sep="\n")
