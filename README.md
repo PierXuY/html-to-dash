@@ -40,7 +40,7 @@ html.Div(
 - By default, only tags in the dash.html module are supported.
 - Tags and attributes are checked, and those that are not supported are automatically removed.
 - If the provided HTML string is unclosed, div will be automatically added as the root tag.
-- The body and head tags will be automatically removed without notification, as these tags may be automatically supplemented by the lxml module and are not supported in dash.
+- The html, body, and head tags will be automatically removed without notification, as these tags may be automatically supplemented by the lxml module and are not supported in dash.
 
 ## Expanded usage
 ```python
@@ -108,7 +108,7 @@ html.Div(
 - Supports any custom module, not limited to HTML and DCC. Essentially, it is the processing of strings.
 - Custom module prioritize in order and above the default dash.html module.
 - The tag_attr_func param is a function that handle attribute formatting under the tag.
-- If thr HTML structure is huge, set huge_tree to True.
+- If the HTML structure is huge, set huge_tree to True.
 
 # References
 - https://github.com/mhowell86/convert-html-to-dash
