@@ -62,7 +62,7 @@ element_str = """
 </html>
 """
 
-extra_mod = [{"dcc": {"Input": {"id", "type", "placeholder", "aria-*"}}}]
+extra_mod = [{"dcc": {"Input": ["id", "type", "placeholder", "aria-*"]}}]
 
 def tag_attr_func(tag, items):
     if tag == "Input":
