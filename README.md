@@ -55,6 +55,7 @@ element_str = """
     </div>
     <div>text</div>
     <svg></svg>
+    <script></script>
     <div><a href="#" id="link2">B</a></div>
 </div>
 </body>
@@ -72,6 +73,7 @@ def tag_attr_func(tag, items):
 parsed_ret = parse_html(
     element_str,
     tag_map={"svg": "img"},
+    skip_tags=['script'],
     extra_mod=extra_mod,
     tag_attr_func=tag_attr_func,
     if_return=True,
@@ -80,6 +82,7 @@ print(parsed_ret)
 ```
 Print:
 ```
+Tags: Unsupported [script] removed.
 Attr: name attribute in dcc.Input is not supported, has been removed.
 html.Div(
     children=[
@@ -105,9 +108,12 @@ html.Div(
 - Both class and className can be handled correctly.
 - In fact, attributes with the "-" symbol are processed by default, which is only used here as an example. Similarly, the style attribute can be handled correctly.
 - If tag_map param is provided, will convert the corresponding tag names in the HTML based on the dict content before formal processing.
+- Attention: The priority of tag_map is higher than skip_tags(HTML tags that need to be skipped).
 - Supports any custom module, not limited to HTML and DCC. Essentially, it is the processing of strings.
 - Custom module prioritize in order and above the default dash.html module.
-- The tag_attr_func param is a function that handle attribute formatting under the tag.
+- The tag_attr_func param is a function that handle attribute formatting under the tag.   
+  When adding quotation marks within a string, `double quotation marks` should be added to avoid the black module being unable to parse.   
+  For example,`f'**{{"{k}": "{v}"}}'` instead of `f"**{{'{k}': '{v}'}}"`、`f'{k}="{v}"'` instead of `f"{k}='{v}'"`
 - If the HTML structure is huge, set huge_tree to True.
 
 # References

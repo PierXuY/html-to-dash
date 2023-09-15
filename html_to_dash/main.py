@@ -6,15 +6,17 @@ from typing import Union, Callable, List, Dict
 
 class FormatParser:
     def __init__(
-        self,
-        mod,
-        html_str,
-        tag_map: Union[None, Dict] = None,
-        extra_mod: Union[None, List] = None,
-        tag_attr_func: Union[None, Callable] = None,
-        huge_tree: bool = False,
+            self,
+            mod,
+            html_str,
+            tag_map: Union[None, Dict] = None,
+            skip_tags: list = None,
+            extra_mod: Union[None, List] = None,
+            tag_attr_func: Union[None, Callable] = None,
+            huge_tree: bool = False,
     ):
         self.tag_map = tag_map
+        self.skip_tags = skip_tags
         self.huge_tree = huge_tree
         self.tag_attr_func = tag_attr_func
 
@@ -43,7 +45,11 @@ class FormatParser:
         children_list = []
 
         text = html_etree.text
-        text = "" if text is None else text.replace("\n", "").strip()
+        # When adding quotation mark, must double quotation mark on the outside and single mark on the inside;
+        # otherwise the automatic escape result will not match the black module method.
+        text = "" if text is None else text.replace('\n',' ').replace('"', "'")
+        # Will convert excess white space into a single and remove left and right white spaces。
+        text= " ".join(filter(None, text.split(' ')))
         if text:
             children_list.append(f'"{text}"')
 
@@ -90,10 +96,15 @@ class FormatParser:
         html_etree_tag_names_set = {
             element.tag for element in html_etree.iterdescendants()
         }
-        unsupported_tags_set = html_etree_tag_names_set - set(allowed_tags)
+        allowed_tags_set = set(allowed_tags)
+        unsupported_tags_set = html_etree_tag_names_set - allowed_tags_set
+        if self.skip_tags:
+            unsupported_tags_set  = unsupported_tags_set.union(set(self.skip_tags))
         etree.strip_tags(html_etree, unsupported_tags_set)
 
         notify_unsupported_tags_set = unsupported_tags_set - {"body", "head"}
+        if self.skip_tags:
+            notify_unsupported_tags_set -= set(self.skip_tags)-allowed_tags_set
         if notify_unsupported_tags_set:
             print(
                 f"Tags: Unsupported [{', '.join(notify_unsupported_tags_set)}] removed."
@@ -139,12 +150,16 @@ class FormatParser:
     def _tag_attr_format(self, tag: str, attr_item: Union[list, tuple]) -> str:
         """
         Format of attributes under the tag.
+        Caution: When adding quotation mark, must double quotation mark on the outside and single mark on the inside;
+        otherwise the automatic escape result will not match the black module method.
         """
+        k, v = attr_item
+        v = v.replace('\n',' ').replace('"', "'")
+
         if self.tag_attr_func:
-            if ret := self.tag_attr_func(tag, attr_item):
+            if ret := self.tag_attr_func(tag, (k, v)):
                 return ret
 
-        k, v = attr_item
         if k == "style":
             style_items = v.split(";")
             style_dict = {
@@ -156,16 +171,16 @@ class FormatParser:
         if k == "class":
             return f'className="{v}"'
         if "-" in k:
-            return f"**{{'{k}': '{v}'}}"
+            return f'**{{"{k}": "{v}"}}'
         return f'{k}="{v}"'
 
     @staticmethod
     def _check_attrs(
-        attr: str,
-        allowed_attrs: list,
-        wildcard_attrs: list,
-        current_mod: str,
-        tag_str: str,
+            attr: str,
+            allowed_attrs: list,
+            wildcard_attrs: list,
+            current_mod: str,
+            tag_str: str,
     ) -> bool:
         """
         Check if attribute names are supported.
@@ -181,18 +196,20 @@ class FormatParser:
 
 
 def parse_html(
-    html_str,
-    extra_mod: Union[None, List] = None,
-    tag_map: Union[None, Dict] = None,
-    tag_attr_func: Union[None, Callable] = None,
-    if_return: bool = False,
-    huge_tree: bool = False,
+        html_str,
+        tag_map: Union[None, Dict] = None,
+        skip_tags: list = None,
+        extra_mod: Union[None, List] = None,
+        tag_attr_func: Union[None, Callable] = None,
+        huge_tree: bool = False,
+        if_return: bool = False,
 ):
     """
     Convert HTML format to DASH format.
     :param html_str: HTML that needs to be converted
-    :param extra_mod: Additional module support(Prioritize in order and above the default dash.html module)
     :param tag_map: Convert the corresponding tag names in the HTML based on the dict content before formal processing.
+    :param skip_tags: HTML tags that need to be skipped.Attention: The priority of tag_map is higher than skip_tags.
+    :param extra_mod: Additional module support(Prioritize in order and above the default dash.html module)
     :param tag_attr_func: Function that handle attribute formatting under the tag.
     :param if_return: Whether to return. If it is false, only print result.
     :param huge_tree: Used when the HTML structure is huge.
@@ -200,8 +217,9 @@ def parse_html(
     parser = FormatParser(
         dash.html,
         html_str,
-        extra_mod=extra_mod,
+        skip_tags=skip_tags,
         tag_map=tag_map,
+        extra_mod=extra_mod,
         tag_attr_func=tag_attr_func,
         huge_tree=huge_tree,
     )

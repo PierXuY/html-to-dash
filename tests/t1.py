@@ -32,6 +32,7 @@ if __name__ == "__main__":
         </div>
         <div>text</div>
         <svg></svg>
+        <script></script>
         <div><a href="#" id="link2">B</a></div>
     </div>
     </body>
@@ -49,6 +50,7 @@ if __name__ == "__main__":
     parsed_ret = parse_html(
         element_str,
         tag_map={"svg": "img"},
+        skip_tags=['script'],
         extra_mod=extra_mod,
         tag_attr_func=tag_attr_func,
         if_return=True,
