@@ -212,10 +212,10 @@ class FormatParser:
                 v = int(v)
             except ValueError:
                 pass
-        if k in ["disable_n_clicks", "hidden"]:
+        if k in ["disable_n_clicks", "hidden", "disabled"]:
             if v.lower() == "true":
                 return f"{k}=True"
-            elif v.lower() == "false":
+            elif (v.lower() == "false") or (v.strip() == ""):
                 return f"{k}=False"
 
         return f'{k}="{v}"'
