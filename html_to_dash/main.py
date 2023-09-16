@@ -1,8 +1,21 @@
+import sys
 import dash
-import dash_svg
+import logging
+import cssutils
+import keyword
 from black import format_str, FileMode
 from lxml import etree
 from typing import Union, Callable, List, Dict
+
+
+cssutils.log.enabled = False
+# logger
+logger = logging.getLogger("html-to-dash")
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("%(message)s")
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 class FormatParser:
@@ -32,6 +45,8 @@ class FormatParser:
         self.all_mod = [{"html": {tag: [] for tag in html_allowed_tags}}]
 
         if enable_dash_svg:
+            import dash_svg
+
             dash_svg_allowed_tags = [
                 attribute
                 for attribute in dir(dash_svg)
@@ -120,14 +135,19 @@ class FormatParser:
         unsupported_tags_set = html_etree_tag_names_set - allowed_tags_set
         if self.skip_tags:
             unsupported_tags_set = unsupported_tags_set.union(set(self.skip_tags))
+
+        # Remove the tag itself and its text.
+        for tag in unsupported_tags_set:
+            for element in html_etree.xpath(f"//{tag}"):
+                element.text = None
         etree.strip_tags(html_etree, unsupported_tags_set)
 
         notify_unsupported_tags_set = unsupported_tags_set - {"body", "head"}
         if self.skip_tags:
             notify_unsupported_tags_set -= set(self.skip_tags) - allowed_tags_set
         if notify_unsupported_tags_set:
-            print(
-                f"Tags: Unsupported [{', '.join(notify_unsupported_tags_set)}] removed."
+            logger.info(
+                f"# Tags: Unsupported [{', '.join(notify_unsupported_tags_set)}] removed."
             )
 
         html_children = html_etree.getchildren()
@@ -177,17 +197,27 @@ class FormatParser:
                 return ret
 
         if k == "style":
-            style_items = v.split(";")
-            style_dict = {
-                item.split(":")[0].strip(): item.split(":")[1].strip()
-                for item in style_items
-                if item
-            }
+            style_dict = {}
+            style_object = cssutils.parseStyle(v)
+            for prop in style_object:
+                style_dict[prop.name] = prop.value
             return f"{k}={str(style_dict)}"
         if k == "class":
             return f'className="{v}"'
-        if "-" in k:
+        if ("-" in k) or (k in keyword.kwlist):
             return f'**{{"{k}": "{v}"}}'
+
+        if k in ["n_clicks", "n_clicks_timestamp"]:
+            try:
+                v = int(v)
+            except ValueError:
+                pass
+        if k in ["disable_n_clicks", "hidden"]:
+            if v.lower() == "true":
+                return f"{k}=True"
+            elif v.lower() == "false":
+                return f"{k}=False"
+
         return f'{k}="{v}"'
 
     @staticmethod
@@ -206,8 +236,8 @@ class FormatParser:
         for wd_attr in wildcard_attrs:
             if attr.startswith(wd_attr):
                 return True
-        print(
-            f"Attr: {attr} attribute in {current_mod}.{tag_str} is not supported, has been removed."
+        logger.info(
+            f"# Attr: {attr} attribute in {current_mod}.{tag_str} is not supported, has been removed."
         )
 
 
@@ -220,18 +250,21 @@ def parse_html(
     enable_dash_svg: bool = False,
     huge_tree: bool = False,
     if_return: bool = False,
+    if_log: bool = True,
 ):
     """
     Convert HTML format to DASH format.
     :param html_str: HTML that needs to be converted
     :param tag_map: Convert the corresponding tag names in the HTML based on the dict content before formal processing.
-    :param skip_tags: HTML tags that need to be skipped.Attention: The priority of tag_map is higher than skip_tags.
+    :param skip_tags: Remove the tag itself and its text.Attention: The priority of tag_map is higher than skip_tags.
     :param extra_mod: Additional module support(Prioritize in order and above the default dash.html module)
     :param tag_attr_func: Function that handle attribute formatting under the tag.
     :param huge_tree: Used when the HTML structure is huge.
     :param if_return: Whether to return. If it is false, only print result.
     :param enable_dash_svg: Enable dash_svg module to handle SVG tags.
+    :param if_log: Whether to output logs for checking labels and attributes.
     """
+    logger.disabled = not if_log
     parser = FormatParser(
         dash.html,
         html_str,
@@ -246,4 +279,4 @@ def parse_html(
     parsed_ret = format_str(parsed_format, mode=FileMode())
     if if_return:
         return parsed_ret
-    print("-----" * 16, "Result:", parsed_ret, sep="\n")
+    print("Result:", parsed_ret, sep="\n")

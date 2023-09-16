@@ -9,7 +9,7 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 
 setup(
     name="html_to_dash",
-    version='0.1.5',
+    version='0.1.6',
     author="PierXuY",
     author_email="wxuymail@163.com",
     description="Convert HTML to dash format.",
@@ -17,7 +17,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    install_requires=['dash', 'black', 'lxml', 'dash-svg'],
+    install_requires=['dash', 'black', 'lxml', 'dash-svg', 'cssutils'],
     keywords=['html', 'dash'],
     python_requires=">=3.6",
     classifiers=[
