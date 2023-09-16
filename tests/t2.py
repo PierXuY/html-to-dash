@@ -39,7 +39,7 @@ element_str = """
 </html>
 """
 
-extra_mod = [{"dcc": {"Input": {"id", "type", "placeholder", "aria-*"}}}]
+extra_mod = [{"dcc": {"Input": ["id", "type", "placeholder", "aria-*"]}}]
 
 
 def tag_attr_func(tag, items):
@@ -47,13 +47,12 @@ def tag_attr_func(tag, items):
         k, v = items
         if "-" in k:
             return f'**{{"{k}": "{v}"}}'
-            # return f"**{{'{k}': '{v}'}}"
 
 
 parsed_ret = parse_html(
     element_str,
     tag_map={"svg": "img"},
-    skip_tags=['script'],
+    skip_tags=["script"],
     extra_mod=extra_mod,
     tag_attr_func=tag_attr_func,
     if_return=True,

@@ -1,4 +1,5 @@
 import dash
+import dash_svg
 from black import format_str, FileMode
 from lxml import etree
 from typing import Union, Callable, List, Dict
@@ -6,15 +7,17 @@ from typing import Union, Callable, List, Dict
 
 class FormatParser:
     def __init__(
-            self,
-            mod,
-            html_str,
-            tag_map: Union[None, Dict] = None,
-            skip_tags: list = None,
-            extra_mod: Union[None, List] = None,
-            tag_attr_func: Union[None, Callable] = None,
-            huge_tree: bool = False,
+        self,
+        html_mod,
+        html_str,
+        tag_map: Union[None, Dict] = None,
+        skip_tags: list = None,
+        extra_mod: Union[None, list[dict[str, dict[str, list]]]] = None,
+        tag_attr_func: Union[None, Callable] = None,
+        enable_dash_svg: bool = False,
+        huge_tree: bool = False,
     ):
+        self.html_mod = html_mod
         self.tag_map = tag_map
         self.skip_tags = skip_tags
         self.huge_tree = huge_tree
@@ -22,10 +25,27 @@ class FormatParser:
 
         html_allowed_tags = [
             attribute
-            for attribute in dir(mod)
-            if callable(getattr(mod, attribute)) and not attribute.startswith("_")
+            for attribute in dir(self.html_mod)
+            if callable(getattr(self.html_mod, attribute))
+            and not attribute.startswith("_")
         ]
         self.all_mod = [{"html": {tag: [] for tag in html_allowed_tags}}]
+
+        if enable_dash_svg:
+            dash_svg_allowed_tags = [
+                attribute
+                for attribute in dir(dash_svg)
+                if callable(getattr(dash_svg, attribute))
+                and not attribute.startswith("_")
+            ]
+            dash_svg_tag_attr_dict = {}
+            for tag in dash_svg_allowed_tags:
+                dash_svg_tag_attr_dict[tag] = getattr(dash_svg, tag)()._prop_names
+            dash_svg_mod: list[dict[str, dict[str, list]]] = [
+                {"dash_svg": dash_svg_tag_attr_dict}
+            ]
+            self.all_mod = dash_svg_mod + self.all_mod
+
         if extra_mod:
             self.all_mod = extra_mod + self.all_mod
 
@@ -47,9 +67,9 @@ class FormatParser:
         text = html_etree.text
         # When adding quotation mark, must double quotation mark on the outside and single mark on the inside;
         # otherwise the automatic escape result will not match the black module method.
-        text = "" if text is None else text.replace('\n',' ').replace('"', "'")
+        text = "" if text is None else text.replace("\n", " ").replace('"', "'")
         # Will convert excess white space into a single and remove left and right white spaces。
-        text= " ".join(filter(None, text.split(' ')))
+        text = " ".join(filter(None, text.split(" ")))
         if text:
             children_list.append(f'"{text}"')
 
@@ -99,12 +119,12 @@ class FormatParser:
         allowed_tags_set = set(allowed_tags)
         unsupported_tags_set = html_etree_tag_names_set - allowed_tags_set
         if self.skip_tags:
-            unsupported_tags_set  = unsupported_tags_set.union(set(self.skip_tags))
+            unsupported_tags_set = unsupported_tags_set.union(set(self.skip_tags))
         etree.strip_tags(html_etree, unsupported_tags_set)
 
         notify_unsupported_tags_set = unsupported_tags_set - {"body", "head"}
         if self.skip_tags:
-            notify_unsupported_tags_set -= set(self.skip_tags)-allowed_tags_set
+            notify_unsupported_tags_set -= set(self.skip_tags) - allowed_tags_set
         if notify_unsupported_tags_set:
             print(
                 f"Tags: Unsupported [{', '.join(notify_unsupported_tags_set)}] removed."
@@ -133,11 +153,7 @@ class FormatParser:
         Get allowed tag under the module.
         """
         if mod == "html":
-            exec(
-                f"allowed_attrs = dash.{mod}.{tag.capitalize()}()._prop_names",
-                globals(),
-            )
-            allowed_attrs = globals()["allowed_attrs"]
+            allowed_attrs = getattr(self.html_mod, tag.capitalize())()._prop_names
         else:
             allowed_attrs = list(filter(lambda x: mod in x.keys(), self.all_mod))[0][
                 mod
@@ -154,7 +170,7 @@ class FormatParser:
         otherwise the automatic escape result will not match the black module method.
         """
         k, v = attr_item
-        v = v.replace('\n',' ').replace('"', "'")
+        v = v.replace("\n", " ").replace('"', "'")
 
         if self.tag_attr_func:
             if ret := self.tag_attr_func(tag, (k, v)):
@@ -176,11 +192,11 @@ class FormatParser:
 
     @staticmethod
     def _check_attrs(
-            attr: str,
-            allowed_attrs: list,
-            wildcard_attrs: list,
-            current_mod: str,
-            tag_str: str,
+        attr: str,
+        allowed_attrs: list,
+        wildcard_attrs: list,
+        current_mod: str,
+        tag_str: str,
     ) -> bool:
         """
         Check if attribute names are supported.
@@ -196,13 +212,14 @@ class FormatParser:
 
 
 def parse_html(
-        html_str,
-        tag_map: Union[None, Dict] = None,
-        skip_tags: list = None,
-        extra_mod: Union[None, List] = None,
-        tag_attr_func: Union[None, Callable] = None,
-        huge_tree: bool = False,
-        if_return: bool = False,
+    html_str,
+    tag_map: Union[None, Dict] = None,
+    skip_tags: list = None,
+    extra_mod: Union[None, List] = None,
+    tag_attr_func: Union[None, Callable] = None,
+    enable_dash_svg: bool = False,
+    huge_tree: bool = False,
+    if_return: bool = False,
 ):
     """
     Convert HTML format to DASH format.
@@ -211,8 +228,9 @@ def parse_html(
     :param skip_tags: HTML tags that need to be skipped.Attention: The priority of tag_map is higher than skip_tags.
     :param extra_mod: Additional module support(Prioritize in order and above the default dash.html module)
     :param tag_attr_func: Function that handle attribute formatting under the tag.
-    :param if_return: Whether to return. If it is false, only print result.
     :param huge_tree: Used when the HTML structure is huge.
+    :param if_return: Whether to return. If it is false, only print result.
+    :param enable_dash_svg: Enable dash_svg module to handle SVG tags.
     """
     parser = FormatParser(
         dash.html,
@@ -221,6 +239,7 @@ def parse_html(
         tag_map=tag_map,
         extra_mod=extra_mod,
         tag_attr_func=tag_attr_func,
+        enable_dash_svg=enable_dash_svg,
         huge_tree=huge_tree,
     )
     parsed_format = parser.parse(parser.root)
