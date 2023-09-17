@@ -3,5 +3,5 @@ dash_svg
 black~=23.7.0
 lxml~=4.9.2
 
-setuptools~=65.5.0
+setuptools~=68.2.2
 cssutils~=2.7.1
