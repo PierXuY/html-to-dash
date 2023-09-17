@@ -209,7 +209,7 @@ class FormatParser:
             style_object = cssutils.parseStyle(v)
             for prop in style_object:
                 style_dict[prop.name] = prop.value
-            return f"{k}={str(style_dict)}"
+            return f'{k}={str(style_dict)}'
         if k == "class":
             return f'className="{v}"'
         if ("-" in k) or (k in keyword.kwlist):
@@ -223,9 +223,9 @@ class FormatParser:
                 pass
         if k in ["disable_n_clicks", "hidden", "disabled"]:
             if v.lower() == "true":
-                return f"{k}=True"
+                return f'{k}=True'
             elif (v.lower() == "false") or (v.strip() == ""):
-                return f"{k}=False"
+                return f'{k}=False'
 
         return f'{k}="{v}"'
 
