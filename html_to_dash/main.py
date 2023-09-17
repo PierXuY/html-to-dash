@@ -210,6 +210,7 @@ class FormatParser:
         if k in ["n_clicks", "n_clicks_timestamp"]:
             try:
                 v = int(v)
+                return f'{k}={v}'
             except ValueError:
                 pass
         if k in ["disable_n_clicks", "hidden", "disabled"]:
