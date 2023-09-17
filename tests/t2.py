@@ -20,7 +20,7 @@ aas
 d
 </div>
 """
-parse_html(html_str, if_return=False)
+parse_html(html_str, skip_tags=['script'], if_return=False)
 
 element_str = """
 <html>

@@ -1,3 +1,2 @@
-from .main import parse_html
-
+from .main import parse_html, FormatParser
 

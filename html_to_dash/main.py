@@ -17,11 +17,17 @@ handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+html_allowed_tags = [
+    attribute
+    for attribute in dir(dash.html)
+    if callable(getattr(dash.html, attribute)) and not attribute.startswith("_")
+]
+html_mod = [{"html": {tag: [] for tag in html_allowed_tags}}]
+
 
 class FormatParser:
     def __init__(
         self,
-        html_mod,
         html_str,
         tag_map: Union[None, Dict] = None,
         skip_tags: list = None,
@@ -30,19 +36,15 @@ class FormatParser:
         enable_dash_svg: bool = False,
         huge_tree: bool = False,
     ):
-        self.html_mod = html_mod
+        self.html_str = html_str
         self.tag_map = tag_map
         self.skip_tags = skip_tags
         self.huge_tree = huge_tree
         self.tag_attr_func = tag_attr_func
-
-        html_allowed_tags = [
-            attribute
-            for attribute in dir(self.html_mod)
-            if callable(getattr(self.html_mod, attribute))
-            and not attribute.startswith("_")
-        ]
-        self.all_mod = [{"html": {tag: [] for tag in html_allowed_tags}}]
+        self.logger = logger
+        self.logger.disabled = False
+        self.lower_tag_dict = None
+        self.all_mod = html_mod
 
         if enable_dash_svg:
             import dash_svg
@@ -64,11 +66,18 @@ class FormatParser:
         if extra_mod:
             self.all_mod = extra_mod + self.all_mod
 
+    def parse(self):
+        """
+        Calling recursive parsing functions to complete task.
+        """
         temp_list = [value for mod in self.all_mod for value in mod.values()]
         self.lower_tag_dict = {k.lower(): k for item in temp_list for k in item.keys()}
-        self.root = self._handle_html_str(html_str, self.lower_tag_dict.keys())
+        root = self._handle_html_str(self.html_str, self.lower_tag_dict.keys())
+        parsed_format = self.parse_html_recursive(root)
+        parsed_ret = format_str(parsed_format, mode=FileMode())
+        return parsed_ret
 
-    def parse(self, html_etree) -> str:
+    def parse_html_recursive(self, html_etree) -> str:
         """
         Convert HTML format to DASH format recursively.
         Html_etree should only contain tags allowed by the module before entering the function.
@@ -89,7 +98,7 @@ class FormatParser:
             children_list.append(f'"{text}"')
 
         if len(children) > 0:
-            parsed_children = [self.parse(child) for child in html_etree.getchildren()]
+            parsed_children = [self.parse_html_recursive(child) for child in html_etree.getchildren()]
             children_list.extend(parsed_children)
 
         allowed_attrs = self._get_allowed_attrs(current_mod, tag_str)
@@ -173,7 +182,7 @@ class FormatParser:
         Get allowed tag under the module.
         """
         if mod == "html":
-            allowed_attrs = getattr(self.html_mod, tag.capitalize())()._prop_names
+            allowed_attrs = getattr(dash.html, tag.capitalize())()._prop_names
         else:
             allowed_attrs = list(filter(lambda x: mod in x.keys(), self.all_mod))[0][
                 mod
@@ -265,9 +274,7 @@ def parse_html(
     :param enable_dash_svg: Enable dash_svg module to handle SVG tags.
     :param if_log: Whether to output logs for checking labels and attributes.
     """
-    logger.disabled = not if_log
     parser = FormatParser(
-        dash.html,
         html_str,
         skip_tags=skip_tags,
         tag_map=tag_map,
@@ -276,8 +283,8 @@ def parse_html(
         enable_dash_svg=enable_dash_svg,
         huge_tree=huge_tree,
     )
-    parsed_format = parser.parse(parser.root)
-    parsed_ret = format_str(parsed_format, mode=FileMode())
+    parser.logger.disabled = not if_log
+    parsed_ret = parser.parse()
     if if_return:
         return parsed_ret
     print("Result:", parsed_ret, sep="\n")
