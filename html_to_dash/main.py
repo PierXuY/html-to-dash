@@ -6,9 +6,8 @@ import keyword
 from black import format_str, FileMode
 from lxml import etree
 from typing import Union, Callable, List, Dict
-
-
 cssutils.log.enabled = False
+
 # logger
 logger = logging.getLogger("html-to-dash")
 logger.setLevel(logging.INFO)
