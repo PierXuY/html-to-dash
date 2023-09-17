@@ -72,11 +72,11 @@ class FormatParser:
         temp_list = [value for mod in self.all_mod for value in mod.values()]
         self.lower_tag_dict = {k.lower(): k for item in temp_list for k in item.keys()}
         root = self._handle_html_str(self.html_str, self.lower_tag_dict.keys())
-        parsed_format = self.parse_html_recursive(root)
+        parsed_format = self._parse_html_recursive(root)
         parsed_ret = format_str(parsed_format, mode=FileMode())
         return parsed_ret
 
-    def parse_html_recursive(self, html_etree) -> str:
+    def _parse_html_recursive(self, html_etree) -> str:
         """
         Convert HTML format to DASH format recursively.
         Html_etree should only contain tags allowed by the module before entering the function.
@@ -97,7 +97,7 @@ class FormatParser:
             children_list.append(f'"{text}"')
 
         if len(children) > 0:
-            parsed_children = [self.parse_html_recursive(child) for child in html_etree.getchildren()]
+            parsed_children = [self._parse_html_recursive(child) for child in html_etree.getchildren()]
             children_list.extend(parsed_children)
 
         allowed_attrs = self._get_allowed_attrs(current_mod, tag_str)
@@ -181,7 +181,7 @@ class FormatParser:
         Get allowed tag under the module.
         """
         if mod == "html":
-            allowed_attrs = getattr(dash.html, tag.capitalize())()._prop_names
+            allowed_attrs = getattr(dash.html, tag)()._prop_names
         else:
             allowed_attrs = list(filter(lambda x: mod in x.keys(), self.all_mod))[0][
                 mod
