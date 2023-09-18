@@ -190,6 +190,50 @@ class FormatParser:
         ret = list(map(lambda x: attr_map.get(x, x), allowed_attrs))
         return ret
 
+    @staticmethod
+    def _check_return_attrs(
+        current_mod: str,
+        tag_str: str,
+        attr_items: list[tuple],
+        allowed_attrs: list,
+        wildcard_attrs: list,
+    ) -> dict:
+        """
+        Check if attribute names are supported(case-insensitive) and return attrs_dict.
+        """
+        attrs_dict = {}
+        notify_unsupported_attrs_list = []
+        lower_allowed_attrs_dict = {k.lower(): k for k in allowed_attrs}
+        lower_wildcard_attrs_dict = {k.lower(): k for k in wildcard_attrs}
+
+        for attr_name, value in attr_items:
+            attr_name_lower = attr_name.lower()
+            if attr_name_lower in lower_allowed_attrs_dict.keys():
+                attrs_dict[lower_allowed_attrs_dict[attr_name_lower]] = value
+            elif (
+                temp_attr := attr_name_lower.replace("-", "")
+            ) in lower_allowed_attrs_dict.keys():
+                attrs_dict[lower_allowed_attrs_dict[temp_attr]] = value
+                del temp_attr
+            elif temp_list := list(
+                filter(
+                    lambda x: attr_name_lower.startswith(x), lower_wildcard_attrs_dict
+                )
+            ):
+                attrs_dict[
+                    lower_wildcard_attrs_dict[temp_list[0]]
+                    + attr_name[len(temp_list[0]):]
+                ] = value
+                del temp_list
+            else:
+                notify_unsupported_attrs_list.append(attr_name)
+
+        if notify_unsupported_attrs_list:
+            logger.info(
+                f'# Attrs: Unsupported [{", ".join(notify_unsupported_attrs_list)}] in {current_mod}.{tag_str} removed.'
+            )
+        return attrs_dict
+
     def _tag_attr_format(self, tag: str, attr_item: Union[list, tuple]) -> str:
         """
         Format of attributes under the tag.
@@ -230,50 +274,6 @@ class FormatParser:
                 return f"{k}=False"
 
         return f'{k}="{v}"'
-
-    @staticmethod
-    def _check_return_attrs(
-        current_mod: str,
-        tag_str: str,
-        attr_items: list[tuple],
-        allowed_attrs: list,
-        wildcard_attrs: list,
-    ) -> dict:
-        """
-        Check if attribute names are supported(case-insensitive) and return attrs_dict.
-        """
-        attrs_dict = {}
-        notify_unsupported_attrs_list = []
-        lower_allowed_attrs_dict = {k.lower(): k for k in allowed_attrs}
-        lower_wildcard_attrs_dict = {k.lower(): k for k in wildcard_attrs}
-
-        for attr_name, value in attr_items:
-            attr_name_lower = attr_name.lower()
-            if attr_name_lower in lower_allowed_attrs_dict.keys():
-                attrs_dict[lower_allowed_attrs_dict[attr_name_lower]] = value
-            elif (
-                temp_attr := attr_name_lower.replace("-", "")
-            ) in lower_allowed_attrs_dict.keys():
-                attrs_dict[lower_allowed_attrs_dict[temp_attr]] = value
-                del temp_attr
-            elif temp_list := list(
-                filter(
-                    lambda x: attr_name_lower.startswith(x), lower_wildcard_attrs_dict
-                )
-            ):
-                attrs_dict[
-                    lower_wildcard_attrs_dict[temp_list[0]]
-                    + attr_name[len(temp_list[0]) :]
-                ] = value
-                del temp_list
-            else:
-                notify_unsupported_attrs_list.append(attr_name)
-
-        if notify_unsupported_attrs_list:
-            logger.info(
-                f'# Attrs: Unsupported [{", ".join(notify_unsupported_attrs_list)}] in {current_mod}.{tag_str} removed.'
-            )
-        return attrs_dict
 
 
 def parse_html(
