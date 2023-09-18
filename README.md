@@ -22,7 +22,7 @@ parse_html(element_str)
 ```
 Print:
 ```
-# Tags: Unsupported [svg] removed.
+# Tags : Unsupported [svg] removed.
 Result:
 html.Div(
     children=[
@@ -38,6 +38,7 @@ html.Div(
 ```
 - By default, only tags in the dash.html module are supported.
 - Tags and attributes are checked, and those that are not supported are automatically removed.
+- The tags and attributes are case-insensitive.
 - If the provided HTML string is unclosed, div will be automatically added as the root tag.
 - The html, body, and head tags will be automatically removed without notification, as these tags may be automatically supplemented by the lxml module and are not supported in dash.
 
@@ -120,8 +121,8 @@ print(parsed_ret)
 ```
 Print:
 ```
-# Tags: Unsupported [script] removed.
-# Attr: name attribute in dcc.Input is not supported, has been removed.
+# Tags : Unsupported [script] removed.
+# Attrs: Unsupported [name] in dcc.Input removed.
 html.Div(
     children=[
         dcc.Input(
@@ -141,7 +142,6 @@ html.Div(
     ]
 )
 ```
-- The attributes of the tag are case-insensitive.
 - The \* sign is supported as a wildcard, like data-\*, aria-\*.
 - Both class and className can be handled correctly.
 - In fact, attributes with the "-" symbol are processed by default, which is only used here as an example. Similarly, the style attribute can be handled correctly.
