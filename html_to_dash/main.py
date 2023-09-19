@@ -27,14 +27,14 @@ html_mod = [{"html": {tag: [] for tag in html_allowed_tags}}]
 
 class FormatParser:
     def __init__(
-        self,
-        html_str,
-        tag_map: Union[None, Dict] = None,
-        skip_tags: list = None,
-        extra_mod: Union[None, list[dict[str, dict[str, list]]]] = None,
-        tag_attr_func: Union[None, Callable] = None,
-        enable_dash_svg: bool = False,
-        huge_tree: bool = False,
+            self,
+            html_str,
+            tag_map: Union[None, Dict] = None,
+            skip_tags: list = None,
+            extra_mod: Union[None, list[dict[str, dict[str, list]]]] = None,
+            tag_attr_func: Union[None, Callable] = None,
+            enable_dash_svg: bool = False,
+            huge_tree: bool = False,
     ):
         self.html_str = html_str
         self.tag_map = tag_map
@@ -53,7 +53,7 @@ class FormatParser:
                 attribute
                 for attribute in dir(dash_svg)
                 if callable(getattr(dash_svg, attribute))
-                and not attribute.startswith("_")
+                   and not attribute.startswith("_")
             ]
             dash_svg_tag_attr_dict = {}
             for tag in dash_svg_allowed_tags:
@@ -91,11 +91,14 @@ class FormatParser:
         text = html_etree.text
         # When adding quotation mark, must double quotation mark on the outside and single mark on the inside;
         # otherwise the automatic escape result will not match the black module method.
-        text = "" if text is None else text.replace("\n", " ").replace('"', "'")
-        # Will convert excess white space into a single and remove left and right white spaces。
-        text = " ".join(filter(None, text.split(" ")))
-        if text:
-            children_list.append(f'"{text}"')
+        text = "" if text is None else text.replace('"', "'")
+        if text_strip := text.strip():
+            if "\n" in text_strip:
+                children_list.append(f'"""{text.rstrip()}"""')
+            else:
+                # Will convert excess white space into a single and remove left and right white spaces。
+                text = " ".join(filter(None, text_strip.split(" ")))
+                children_list.append(f'"{text}"')
 
         if len(children) > 0:
             parsed_children = [
@@ -192,11 +195,11 @@ class FormatParser:
 
     @staticmethod
     def _check_return_attrs(
-        current_mod: str,
-        tag_str: str,
-        attr_items: list[tuple],
-        allowed_attrs: list,
-        wildcard_attrs: list,
+            current_mod: str,
+            tag_str: str,
+            attr_items: list[tuple],
+            allowed_attrs: list,
+            wildcard_attrs: list,
     ) -> dict:
         """
         Check if attribute names are supported(case-insensitive) and return attrs_dict.
@@ -211,19 +214,19 @@ class FormatParser:
             if attr_name_lower in lower_allowed_attrs_dict.keys():
                 attrs_dict[lower_allowed_attrs_dict[attr_name_lower]] = value
             elif (
-                temp_attr := attr_name_lower.replace("-", "")
+                    temp_attr := attr_name_lower.replace("-", "")
             ) in lower_allowed_attrs_dict.keys():
                 attrs_dict[lower_allowed_attrs_dict[temp_attr]] = value
                 del temp_attr
             elif temp_list := list(
-                filter(
-                    lambda x: attr_name_lower.startswith(x), lower_wildcard_attrs_dict
-                )
+                    filter(
+                        lambda x: attr_name_lower.startswith(x), lower_wildcard_attrs_dict
+                    )
             ):
                 attrs_dict[
                     lower_wildcard_attrs_dict[temp_list[0]]
                     + attr_name[len(temp_list[0]):]
-                ] = value
+                    ] = value
                 del temp_list
             else:
                 notify_unsupported_attrs_list.append(attr_name)
@@ -277,15 +280,15 @@ class FormatParser:
 
 
 def parse_html(
-    html_str,
-    tag_map: Union[None, Dict] = None,
-    skip_tags: list = None,
-    extra_mod: Union[None, List] = None,
-    tag_attr_func: Union[None, Callable] = None,
-    enable_dash_svg: bool = False,
-    huge_tree: bool = False,
-    if_return: bool = False,
-    if_log: bool = True,
+        html_str,
+        tag_map: Union[None, Dict] = None,
+        skip_tags: list = None,
+        extra_mod: Union[None, List] = None,
+        tag_attr_func: Union[None, Callable] = None,
+        enable_dash_svg: bool = False,
+        huge_tree: bool = False,
+        if_return: bool = False,
+        if_log: bool = True,
 ):
     """
     Convert HTML format to DASH format.

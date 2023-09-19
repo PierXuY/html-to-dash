@@ -16,11 +16,11 @@ html_str = """
         }
     </style>
 <div id="asds'ad'sasd"  class='sada"sd"sa'>
-aas
-d
+    aas   d
+    
 </div>
 """
-parse_html(html_str, skip_tags=['script'], if_return=False)
+parse_html(html_str, if_return=False)
 
 element_str = """
 <html>
