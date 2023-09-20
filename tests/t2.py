@@ -15,6 +15,19 @@ html_str = """
             display: none !important;
         }
     </style>
+    <div><a></a></div>
+    <a></a>
+    <div>
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement('script');
+            hm.src = "https://hm.xxx.com/hm.js?55b574651fcae";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+    </div>
 <div id="asds'ad'sasd"  class='sada"sd"sa'>
     aas   d
     

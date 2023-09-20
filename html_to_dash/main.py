@@ -1,21 +1,11 @@
-import sys
 import dash
-import logging
 import cssutils
 import keyword
-from black import format_str, FileMode
-from lxml import etree
+from black import format_str, Mode
 from typing import Union, Callable, List, Dict
+from .helper import logger, etree_pretty, etree
 
 cssutils.log.enabled = False
-
-# logger
-logger = logging.getLogger("html-to-dash")
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter("%(message)s")
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 html_allowed_tags = [
     attribute
@@ -74,7 +64,7 @@ class FormatParser:
         self.lower_tag_dict = {k.lower(): k for item in temp_list for k in item.keys()}
         root = self._handle_html_str(self.html_str, self.lower_tag_dict.keys())
         parsed_format = self._parse_html_recursive(root)
-        parsed_ret = format_str(parsed_format, mode=FileMode())
+        parsed_ret = format_str(parsed_format, mode=Mode())
         return parsed_ret
 
     def _parse_html_recursive(self, html_etree) -> str:
@@ -94,7 +84,7 @@ class FormatParser:
         text = "" if text is None else text.replace('"', "'")
         if text_strip := text.strip():
             if "\n" in text_strip:
-                children_list.append(f'"""{text.rstrip()}"""')
+                children_list.append(f'"""{text}"""')
             else:
                 # Will convert excess white space into a single and remove left and right white spaces。
                 text = " ".join(filter(None, text_strip.split(" ")))
@@ -162,10 +152,15 @@ class FormatParser:
 
         html_children = html_etree.getchildren()
         if len(html_children) == 1:
-            html_etree = html_children[0]
+            # Create a new root element.
+            html_child = html_children[0]
+            html_etree = etree.Element(html_child.tag)
+            html_etree.extend(html_child.getchildren())
         else:
             # change html to div
             html_etree.tag = "div"
+        # Indent tags and text to beautify multiline string format.
+        etree_pretty(html_etree, depth_mul=2)
         return html_etree
 
     def _get_current_mod(self, tag: str) -> str:
