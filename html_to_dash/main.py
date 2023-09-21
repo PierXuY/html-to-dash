@@ -152,15 +152,15 @@ class FormatParser:
 
         html_children = html_etree.getchildren()
         if len(html_children) == 1:
-            # Create a new root element.
-            html_child = html_children[0]
-            html_etree = etree.Element(html_child.tag)
-            html_etree.extend(html_child.getchildren())
+            # Essentially, the object points to the original etree, and the root tag is still html.
+            html_etree = html_children[0]
+            etree_pretty(html_etree, func=lambda x: (x - 1) * 2)
         else:
             # change html to div
+            for attr in html_etree.attrib:
+                del html_etree.attrib[attr]
             html_etree.tag = "div"
-        # Indent tags and text to beautify multiline string format.
-        etree_pretty(html_etree, depth_mul=2)
+            etree_pretty(html_etree, func=lambda x: x * 2)
         return html_etree
 
     def _get_current_mod(self, tag: str) -> str:
@@ -212,7 +212,6 @@ class FormatParser:
                 temp_attr := attr_name_lower.replace("-", "")
             ) in lower_allowed_attrs_dict.keys():
                 attrs_dict[lower_allowed_attrs_dict[temp_attr]] = value
-                del temp_attr
             elif temp_list := list(
                 filter(
                     lambda x: attr_name_lower.startswith(x), lower_wildcard_attrs_dict
@@ -222,7 +221,6 @@ class FormatParser:
                     lower_wildcard_attrs_dict[temp_list[0]]
                     + attr_name[len(temp_list[0]) :]
                 ] = value
-                del temp_list
             else:
                 notify_unsupported_attrs_list.append(attr_name)
 
