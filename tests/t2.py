@@ -1,3 +1,7 @@
+import sys
+
+sys.path.insert(0, ".")
+
 from html_to_dash import parse_html
 
 html_str = """

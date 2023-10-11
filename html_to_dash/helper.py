@@ -13,7 +13,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def etree_pretty(root, space="\t", func: Union[None, Callable] = None):
+def etree_pretty(root, space=" "*4, func: Union[None, Callable] = None):
     """
     Indent both tags and text in etree._Element.
     :param root: etree._Element

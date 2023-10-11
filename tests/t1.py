@@ -1,3 +1,7 @@
+import sys
+
+sys.path.insert(0, ".")
+
 from html_to_dash import parse_html
 
 if __name__ == "__main__":
@@ -8,7 +12,7 @@ if __name__ == "__main__":
             <a href="#" id="link1">A</a>
         </div>
         <div>text</div>
-        <div><a href="#" id="link2">B</a></div>
+        <div><a href="#" id="link2">B</a>tail</div>
     </div>
     """
     parse_html(element_str)
