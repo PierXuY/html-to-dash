@@ -11,11 +11,11 @@ from html_to_dash import parse_html
 element_str = """
 <div>
     <div class='bg-gray-800' style='color:red;margin:10px'>
-     <svg aria-label="Ripples. Logo" role="img" xmlns="http://www.w3.org/2000/svg"</svg>
+        <svg aria-label="Ripples. Logo" role="img" xmlns="http://www.w3.org/2000/svg"></svg>
         <a href="#" id="link1">A</a>
     </div>
     <div>text</div>
-    <div><a href="#" id="link2">B</a></div>
+    <div><a href="#" id="link1">a1</a>tail1<a href="#" id="link2">a2</a>tail2</div>
 </div>
 """
 parse_html(element_str)
@@ -32,7 +32,14 @@ html.Div(
             children=[html.A(href="#", id="link1", children=["A"])],
         ),
         html.Div(children=["text"]),
-        html.Div(children=[html.A(href="#", id="link2", children=["B"])]),
+        html.Div(
+            children=[
+                html.A(href="#", id="link1", children=["a1"]),
+                html.Span(children=["tail1"]),
+                html.A(href="#", id="link2", children=["a2"]),
+                html.Span(children=["tail2"]),
+            ]
+        ),
     ]
 )
 ```
@@ -41,6 +48,7 @@ html.Div(
 - The tags and attributes are case-insensitive.
 - If the provided HTML string is unclosed, div will be automatically added as the root tag.
 - The html, body, and head tags will be automatically removed without notification, as these tags may be automatically supplemented by the lxml module and are not supported in dash.
+- The tail(Text after element's end tag, but before the next sibling element's start tag) will automatically be converted into the text of a span tag.
 
 ## Enable dash_svg
 Use [dash-svg](https://github.com/stevej2608/dash-svg) module to render SVG tags.

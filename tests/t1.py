@@ -8,11 +8,11 @@ if __name__ == "__main__":
     element_str = """
     <div>
         <div class='bg-gray-800' style='color:red;margin:10px'>
-         <svg aria-label="Ripples. Logo" role="img" xmlns="http://www.w3.org/2000/svg"</svg>
+            <svg aria-label="Ripples. Logo" role="img" xmlns="http://www.w3.org/2000/svg"></svg>
             <a href="#" id="link1">A</a>
         </div>
         <div>text</div>
-        <div><a href="#" id="link2">B</a>tail</div>
+        <div><a href="#" id="link1">a1</a>tail1<a href="#" id="link2">a2</a>tail2</div>
     </div>
     """
     parse_html(element_str)

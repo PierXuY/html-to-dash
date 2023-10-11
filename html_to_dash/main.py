@@ -129,15 +129,18 @@ class FormatParser:
                     element.tag = new_tag
 
         html_etree_tag_names_set = set()
+        tail_elements = []
         for element in html_etree.iterdescendants():
             html_etree_tag_names_set.add(element.tag)
-
-            # convert element.tail to span tag
             if (tail := element.tail) and tail.strip():
-                span = etree.Element("span")
-                span.text = tail
-                element.tail = ""
-                element.getparent().append(span)
+                element.tail = None
+                tail_elements.append((element, tail))
+
+        # convert element.tail to span tag
+        for element, tail in tail_elements:
+            span = etree.Element("span")
+            span.text = tail
+            element.addnext(span)
 
         allowed_tags_set = set(allowed_tags)
         unsupported_tags_set = html_etree_tag_names_set - allowed_tags_set
